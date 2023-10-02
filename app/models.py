@@ -52,7 +52,7 @@ class Hero_powers(db.Model):
     __tablename__ = 'hero_powers'
 
     id = db.Column(db.Integer, primary_key=True)
-    strength = db.Column(db.String(120))
+    name = db.Column(db.String(120))
     hero_id = db.Column(db.Integer, ForeignKey('heroes.id'))
     power_id = db.Column(db.Integer, ForeignKey('powers.id'))
     created_at = db.Column(db.DateTime, server_default=db.func.now())

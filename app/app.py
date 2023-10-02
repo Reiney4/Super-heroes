@@ -1,10 +1,9 @@
- #!/usr/bin/env python3
+#!/usr/bin/env python3
 
-from flask import Flask, make_response, jsonify
+from flask import Flask, make_response, jsonify, request
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from werkzeug.exceptions import NotFound
-
 
 from models import db, Hero, Power, Hero_powers
 
@@ -17,11 +16,6 @@ db.init_app(app)
 
 api = Api(app)
 
-# @app.route('/')
-# def home():
-#     return ''
-
-# create message for landing page 
 class Home(Resource):
     def get(self):
         response_message = {
@@ -29,36 +23,40 @@ class Home(Resource):
         }
         return make_response(response_message, 200)
 
-
 api.add_resource(Home, '/')
 
 class Heroes(Resource):
-# get all restaurants 
     def get(self):
-        heroes = []
-        for hero  in Heroes.query.all():
-            hero_dict={
+        heroes = Hero.query.all()
+        hero_list = []
+        for hero in heroes:
+            hero_dict = {
                 "id": hero.id,
                 "name": hero.name,
-                "address": hero.address
+                "super_name": hero.super_name,
+                "powers": [
+                    {
+                        "id": hero_power.power.id,
+                        "name": hero_power.power.name,
+                        "description": hero_power.power.description,
+                    }
+                    for hero_power in hero.powers
+                ]
             }
-            heroes.append(hero_dict)
-        return make_response(jsonify(heroes), 200)
-
-    
+            hero_list.append(hero_dict)
+        return make_response(jsonify(hero_list), 200)
 
 api.add_resource(Heroes, '/heroes')
 
 class HeroByID(Resource):
-
     def get(self, id):
-        hero = Hero.query.filter_by(id=id).first()
+        hero = Hero.query.get(id)
         if hero:
-            hero_dict={
+            hero_dict = {
                 "id": hero.id,
                 "name": hero.name,
                 "super_name": hero.super_name,
-                "powers":[
+                "powers": [
                     {
                         "id": hero_power.power.id,
                         "name": hero_power.power.name,
@@ -73,52 +71,49 @@ class HeroByID(Resource):
 
 api.add_resource(HeroByID, '/heroes/<int:id>')
 
-class Powerss(Resource):
-
+class Powers(Resource):
     def get(self):
-        powers = []
-        for power in Power.query.all():
-            power_dict={
+        powers = Power.query.all()
+        power_list = []
+        for power in powers:
+            power_dict = {
                 "id": power.id,
                 "name": power.name,
                 "description": power.description
-                            }
-            powers.append(power_dict)
-        return make_response(jsonify(powers), 200)
-api.add_resource(Power, '/powers')
+            }
+            power_list.append(power_dict)
+        return make_response(jsonify(power_list), 200)
 
-# deals with api routes
+api.add_resource(Powers, '/powers')
+
 class Heropowers(Resource):
     def post(self):
         data = request.get_json()
 
         # Validate that the required fields are present in the request
         if not all(key in data for key in ("strength", "hero_id", "power_id")):
-            return make_response(jsonify({"errors": ["validation errors.include all keys"]}), 400)
+            return make_response(jsonify({"errors": ["Validation error: Include all required keys"]}), 400)
 
         strength = data["strength"]
         power_id = data["power_id"]
         hero_id = data["hero_id"]
 
-        # Check if the Pizza and Restaurant exist
+        # Check if the Power and Hero exist
         power = Power.query.get(power_id)
-        hero = Hero.query.get(power_id)
+        hero = Hero.query.get(hero_id)
 
         if not power or not hero:
-            return make_response(jsonify({"errors": ["validation errors power and hero dont exist"]}), 400)
+            return make_response(jsonify({"errors": ["Validation error: Power or Hero doesn't exist"]}), 400)
 
-    
-        hero_power = Heropowers(
-            strength = data["strength"],
-            power_id = data["power_id"],
-            hero_id = data["hero_id"]
-
+        hero_power = Hero_powers(
+            strength=strength,
+            power_id=power_id,
+            hero_id=hero_id
         )
 
         db.session.add(hero_power)
         db.session.commit()
 
-        # Return data related to the Pizza
         power_data = {
             "id": power.id,
             "name": power.name,
@@ -126,8 +121,9 @@ class Heropowers(Resource):
         }
 
         return make_response(jsonify(power_data), 201)
-api.add_resource(Heropowers,'/hero_powers')   
- # deals with not found errors
+
+api.add_resource(Heropowers, '/hero_powers')
+
 @app.errorhandler(NotFound)
 def handle_not_found(e):
     response = make_response(
@@ -135,7 +131,6 @@ def handle_not_found(e):
         404
     )
     return response
-
 
 if __name__ == '__main__':
     app.run(port=5555)
