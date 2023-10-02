@@ -1,11 +1,11 @@
 from app import  app
-from models import Power, Hero, HeroPower, db
+from models import Power, Hero, Hero_powers, db
 import random
 
 with app.app_context():
     Hero.query.delete()
     Power.query.delete()
-    HeroPower.query.delete()
+    Hero_powers.query.delete()
 
     print("🦸‍♀️ Seeding powers...")
 
@@ -55,7 +55,7 @@ with app.app_context():
             power = random.choice(powers)
             strength = random.choice(strengths)
 
-            hero_power = HeroPower(hero_id=hero.id, power_id=power.id, strength=strength)
+            hero_power = Hero_powers(hero_id=hero.id, power_id=power.id, strength=strength)
             db.session.add(hero_power)
             print(hero_power)
 
