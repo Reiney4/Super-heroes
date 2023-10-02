@@ -25,7 +25,7 @@ api = Api(app)
 class Home(Resource):
     def get(self):
         response_message = {
-            "message": "WELCOME TO THE PIZZA SUPER HEROES API."
+            "message": "WELCOME TO THE SUPER HEROES API."
         }
         return make_response(response_message, 200)
 
