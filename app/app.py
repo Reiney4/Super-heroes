@@ -34,14 +34,7 @@ class Heroes(Resource):
                 "id": hero.id,
                 "name": hero.name,
                 "super_name": hero.super_name,
-                "powers": [
-                    {
-                        "id": hero_power.power.id,
-                        "name": hero_power.power.name,
-                        "description": hero_power.power.description,
-                    }
-                    for hero_power in hero.powers
-                ]
+                
             }
             hero_list.append(hero_dict)
         return make_response(jsonify(hero_list), 200)
@@ -133,4 +126,4 @@ def handle_not_found(e):
     return response
 
 if __name__ == '__main__':
-    app.run(port=5555)
+    app.run(port=5555,debug=True)
